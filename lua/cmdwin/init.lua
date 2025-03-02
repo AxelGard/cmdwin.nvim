@@ -99,6 +99,22 @@ local function handle_navigation(direction)
     update_window_content()
 end
 
+-- Function to execute selected command
+local function execute_selected_command()
+    if selected_index > 0 and selected_index <= #current_commands then
+        local selected_name = current_commands[selected_index]
+        local command = command_map[selected_name]
+        if command then
+            -- Close the window first
+            close_floating_window()
+            -- Schedule the command execution for next event loop
+            vim.schedule(function()
+                vim.cmd(command)
+            end)
+        end
+    end
+end
+
 -- Function to handle key input
 local function handle_keypress()
     local ok, char = pcall(vim.fn.getchar)
@@ -113,7 +129,7 @@ local function handle_keypress()
             close_floating_window()
             return
         elseif char == 13 then  -- Enter key
-            -- TODO: Execute selected command
+            execute_selected_command()
             return
         elseif char == 127 or char == 8 then  -- Backspace (different systems use different codes)
             if #current_search > 0 then
