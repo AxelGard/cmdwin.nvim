@@ -11,6 +11,74 @@ local current_buf_id = nil
 -- Store the command map
 local command_map = {}
 
+-- Store current search state
+local current_search = ""
+
+-- Function to filter commands based on search
+local function filter_commands(search_term)
+    local filtered = {}
+    search_term = search_term:lower()
+    for cmd_name, _ in pairs(command_map) do
+        if cmd_name:lower():find(search_term, 1, true) then
+            table.insert(filtered, cmd_name)
+        end
+    end
+    table.sort(filtered)
+    return filtered
+end
+
+-- Function to update window content
+local function update_window_content()
+    if not (current_win_id and vim.api.nvim_win_is_valid(current_win_id)) then
+        return
+    end
+
+    local filtered_commands = filter_commands(current_search)
+    local lines = {
+        '> ' .. current_search,  -- Search prompt
+        '───────────────────',   -- Separator
+    }
+    
+    -- Add filtered commands
+    for _, cmd_name in ipairs(filtered_commands) do
+        table.insert(lines, cmd_name)
+    end
+    
+    -- Update buffer content
+    vim.api.nvim_buf_set_lines(current_buf_id, 0, -1, false, lines)
+    
+    -- Move cursor to end of search line
+    vim.api.nvim_win_set_cursor(current_win_id, {1, #current_search + 2})
+end
+
+-- Function to handle key input
+local function handle_keypress()
+    local char = vim.fn.getchar()
+    
+    -- Convert to string if it's a number (regular character)
+    if type(char) == "number" then
+        char = vim.fn.nr2char(char)
+    end
+    
+    -- Handle special keys
+    if char == '\27' then  -- Esc key
+        close_floating_window()
+        return
+    elseif char == '\13' then  -- Enter key
+        -- TODO: Execute selected command
+        return
+    elseif char == '\127' or char == '\08' then  -- Backspace
+        if #current_search > 0 then
+            current_search = current_search:sub(1, -2)
+        end
+    else
+        -- Add character to search
+        current_search = current_search .. char
+    end
+    
+    update_window_content()
+end
+
 -- Function to close the floating window
 local function close_floating_window()
     -- First check if window exists and is valid
@@ -19,9 +87,10 @@ local function close_floating_window()
         local win_to_close = current_win_id
         local buf_to_delete = current_buf_id
         
-        -- Reset global IDs
+        -- Reset global IDs and search
         current_win_id = nil
         current_buf_id = nil
+        current_search = ""
         
         -- Close the window using local ID
         vim.api.nvim_win_close(win_to_close, true)
@@ -42,6 +111,9 @@ local function open_floating_window()
         close_floating_window()
         return
     end
+
+    -- Reset search
+    current_search = ""
 
     -- Window configuration
     local width = 60
