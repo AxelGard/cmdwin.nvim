@@ -266,12 +266,8 @@ open_floating_window = function()
     vim.api.nvim_buf_set_option(bufnr, 'modifiable', true)
     vim.api.nvim_buf_set_option(bufnr, 'buftype', 'nofile')
     
-    -- Get the current buffer's window ID and its background color
-    local current_win = vim.api.nvim_get_current_win()
-    local winhl = vim.api.nvim_win_get_option(current_win, 'winhl')
-    
-    -- Create a new highlight group for our floating window that matches the current buffer
-    vim.api.nvim_win_set_option(current_win_id, 'winhl', winhl)
+    -- Set window options to use default colors (no highlighting)
+    vim.api.nvim_win_set_option(current_win_id, 'winhighlight', '')
     
     -- Initialize window content
     update_window_content()
