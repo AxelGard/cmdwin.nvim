@@ -13,6 +13,14 @@ local command_map = {}
 
 -- Store current search state
 local current_search = ""
+local selected_index = 0  -- 0 means no selection
+local current_commands = {}  -- Store filtered commands for navigation
+
+-- Store navigation keymaps
+local nav_keymaps = {
+    up = '<C-k>',      -- Default to vim-style navigation
+    down = '<C-j>',
+}
 
 -- Function to filter commands based on search
 local function filter_commands(search_term)
@@ -33,15 +41,28 @@ local function update_window_content()
         return
     end
 
-    local filtered_commands = filter_commands(current_search)
+    -- Update filtered commands
+    current_commands = filter_commands(current_search)
+    
+    -- Adjust selected_index if it's out of bounds
+    if #current_commands == 0 then
+        selected_index = 0
+    elseif selected_index > #current_commands then
+        selected_index = #current_commands
+    end
+
     local lines = {
         '> ' .. current_search,  -- Search prompt
         '───────────────────',   -- Separator
     }
     
-    -- Add filtered commands
-    for _, cmd_name in ipairs(filtered_commands) do
-        table.insert(lines, cmd_name)
+    -- Add filtered commands with selection highlight
+    for i, cmd_name in ipairs(current_commands) do
+        if i == selected_index then
+            table.insert(lines, '➜ ' .. cmd_name)  -- Add arrow for selected item
+        else
+            table.insert(lines, '  ' .. cmd_name)  -- Add padding for unselected items
+        end
     end
     
     -- Update buffer content
@@ -49,6 +70,29 @@ local function update_window_content()
     
     -- Move cursor to end of search line
     vim.api.nvim_win_set_cursor(current_win_id, {1, #current_search + 2})
+end
+
+-- Function to handle navigation
+local function handle_navigation(direction)
+    if #current_commands == 0 then
+        return
+    end
+
+    if direction == 'up' then
+        if selected_index <= 1 then
+            selected_index = #current_commands
+        else
+            selected_index = selected_index - 1
+        end
+    elseif direction == 'down' then
+        if selected_index >= #current_commands then
+            selected_index = 1
+        else
+            selected_index = selected_index + 1
+        end
+    end
+    
+    update_window_content()
 end
 
 -- Function to handle key input
@@ -67,6 +111,8 @@ local function handle_keypress()
         elseif char == 127 or char == 8 then  -- Backspace (different systems use different codes)
             if #current_search > 0 then
                 current_search = current_search:sub(1, -2)
+                -- Reset selection when search changes
+                selected_index = 1
             end
             update_window_content()
             return
@@ -75,9 +121,20 @@ local function handle_keypress()
         char = vim.fn.nr2char(char)
     end
     
+    -- Handle navigation keys
+    if char == nav_keymaps.up then
+        handle_navigation('up')
+        return
+    elseif char == nav_keymaps.down then
+        handle_navigation('down')
+        return
+    end
+    
     -- Add printable characters to search
     if char:match("^[%g%s]$") then  -- Only add printable characters and spaces
         current_search = current_search .. char
+        -- Reset selection when search changes
+        selected_index = 1
         update_window_content()
     end
 end
@@ -94,6 +151,7 @@ local function close_floating_window()
         current_win_id = nil
         current_buf_id = nil
         current_search = ""
+        selected_index = 0
         
         -- Close the window using local ID
         vim.api.nvim_win_close(win_to_close, true)
@@ -115,8 +173,9 @@ local function open_floating_window()
         return
     end
 
-    -- Reset search
+    -- Reset search and selection
     current_search = ""
+    selected_index = 1  -- Start with first item selected
 
     -- Window configuration
     local width = 60
@@ -173,6 +232,12 @@ function M.setup(opts)
     
     -- Store the command map
     command_map = opts.command_map or {}
+    
+    -- Store navigation keymaps if provided
+    if opts.navigation then
+        nav_keymaps.up = opts.navigation.up or nav_keymaps.up
+        nav_keymaps.down = opts.navigation.down or nav_keymaps.down
+    end
     
     -- Validate command map format
     for cmd_name, cmd_value in pairs(command_map) do
