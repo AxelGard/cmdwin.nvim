@@ -15,15 +15,16 @@ local command_map = {}
 local function close_floating_window()
     -- First check if window exists and is valid
     if current_win_id and vim.api.nvim_win_is_valid(current_win_id) then
-        -- Get the buffer ID before closing the window
+        -- Store IDs locally before resetting globals
+        local win_to_close = current_win_id
         local buf_to_delete = current_buf_id
         
-        -- Reset IDs first
+        -- Reset global IDs
         current_win_id = nil
         current_buf_id = nil
         
-        -- Close the window
-        vim.api.nvim_win_close(current_win_id, true)
+        -- Close the window using local ID
+        vim.api.nvim_win_close(win_to_close, true)
         
         -- Schedule buffer deletion for next event loop iteration
         vim.schedule(function()
