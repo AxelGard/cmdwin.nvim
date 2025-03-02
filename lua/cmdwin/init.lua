@@ -33,6 +33,20 @@ local style = {
     unselected = '  ',
 }
 
+-- Window settings
+local window = {
+    position = 'center',    -- 'center', 'top', 'bottom', 'left', 'right'
+    width = 60,            -- window width
+    height = 10,           -- window height
+    padding = {            -- padding from screen edges when using position other than 'center'
+        top = 2,
+        right = 2,
+        bottom = 2,
+        left = 2
+    },
+    border = 'rounded'     -- border style
+}
+
 -- Store navigation keymaps
 local nav_keymaps = {
     up = 11,    -- Ctrl-k (11 is the ASCII code for Ctrl-k)
@@ -205,23 +219,44 @@ open_floating_window = function()
     current_search = ""
     selected_index = 1  -- Start with first item selected
 
-    -- Window configuration
-    local width = 60
-    local height = 10
+    -- Create buffer
     local bufnr = vim.api.nvim_create_buf(false, true)
     current_buf_id = bufnr
     
-    -- Calculate window position (centered)
+    -- Get editor dimensions
     local ui = vim.api.nvim_list_uis()[1]
+    local editor_width = ui.width
+    local editor_height = ui.height
+
+    -- Calculate window position based on settings
+    local col, row
+    if window.position == 'center' then
+        col = (editor_width - window.width) / 2
+        row = (editor_height - window.height) / 2
+    elseif window.position == 'top' then
+        col = (editor_width - window.width) / 2
+        row = window.padding.top
+    elseif window.position == 'bottom' then
+        col = (editor_width - window.width) / 2
+        row = editor_height - window.height - window.padding.bottom
+    elseif window.position == 'left' then
+        col = window.padding.left
+        row = (editor_height - window.height) / 2
+    elseif window.position == 'right' then
+        col = editor_width - window.width - window.padding.right
+        row = (editor_height - window.height) / 2
+    end
+
+    -- Window configuration
     local win_opts = {
         relative = 'editor',
-        width = width,
-        height = height,
-        col = (ui.width - width) / 2,
-        row = (ui.height - height) / 2,
+        width = window.width,
+        height = window.height,
+        col = col,
+        row = row,
         anchor = 'NW',
         style = 'minimal',
-        border = 'rounded'
+        border = window.border
     }
     
     -- Create the window
@@ -266,6 +301,32 @@ function M.setup(opts)
         for k, v in pairs(opts.style) do
             if style[k] then
                 style[k] = v
+            end
+        end
+    end
+
+    -- Update window settings if provided
+    if opts.window then
+        -- Update simple properties
+        if opts.window.position then
+            window.position = opts.window.position
+        end
+        if opts.window.width then
+            window.width = opts.window.width
+        end
+        if opts.window.height then
+            window.height = opts.window.height
+        end
+        if opts.window.border then
+            window.border = opts.window.border
+        end
+        
+        -- Update padding if provided
+        if opts.window.padding then
+            for k, v in pairs(opts.window.padding) do
+                if window.padding[k] then
+                    window.padding[k] = v
+                end
             end
         end
     end

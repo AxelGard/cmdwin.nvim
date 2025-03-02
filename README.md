@@ -15,6 +15,16 @@ require('cmdwin').setup({
         ["Git Status"] = "Git",
         ["Format"] = "lua vim.lsp.buf.format()",
         -- ... more commands ...
-    }
+    },
+    navigation = {
+        up = '<C-k>',
+        down = '<C-j>',
+    },
+    style = {
+        prompt = "> ",
+        separator = "----------------------------------------",
+        selected = ">",
+        unselected = "  ",
+    },
 })
 ``` 
