@@ -53,13 +53,13 @@ local function update_window_content()
 
     local lines = {
         '> ' .. current_search,  -- Search prompt
-        '───────────────────',   -- Separator
+        string.rep('-', 30),     -- Simple separator
     }
     
     -- Add filtered commands with selection highlight
     for i, cmd_name in ipairs(current_commands) do
         if i == selected_index then
-            table.insert(lines, '➜ ' .. cmd_name)  -- Add arrow for selected item
+            table.insert(lines, '> ' .. cmd_name)  -- Simple arrow for selected item
         else
             table.insert(lines, '  ' .. cmd_name)  -- Add padding for unselected items
         end
