@@ -18,8 +18,8 @@ local current_commands = {}  -- Store filtered commands for navigation
 
 -- Store navigation keymaps
 local nav_keymaps = {
-    up = '<C-k>',      -- Default to vim-style navigation
-    down = '<C-j>',
+    up = 11,    -- Ctrl-k (11 is the ASCII code for Ctrl-k)
+    down = 10,  -- Ctrl-j (10 is the ASCII code for Ctrl-j)
 }
 
 -- Function to filter commands based on search
@@ -123,6 +123,13 @@ local function handle_keypress()
             end
             update_window_content()
             return
+        -- Handle navigation with control keys
+        elseif char == nav_keymaps.up then
+            handle_navigation('up')
+            return
+        elseif char == nav_keymaps.down then
+            handle_navigation('down')
+            return
         end
 
         -- Convert regular characters to string
@@ -131,15 +138,6 @@ local function handle_keypress()
             return
         end
         char = char_str
-    end
-
-    -- Handle navigation keys
-    if char == nav_keymaps.up then
-        handle_navigation('up')
-        return
-    elseif char == nav_keymaps.down then
-        handle_navigation('down')
-        return
     end
     
     -- Add printable characters to search
@@ -247,8 +245,23 @@ function M.setup(opts)
     
     -- Store navigation keymaps if provided
     if opts.navigation then
-        nav_keymaps.up = opts.navigation.up or nav_keymaps.up
-        nav_keymaps.down = opts.navigation.down or nav_keymaps.down
+        -- Convert string keymaps to their ASCII values if they're Ctrl combinations
+        if opts.navigation.up then
+            if opts.navigation.up:match('^<C%-%a>$') then
+                local key = string.lower(opts.navigation.up:match('^<C%-(%a)>$'))
+                nav_keymaps.up = string.byte(key) - string.byte('a') + 1
+            else
+                nav_keymaps.up = opts.navigation.up
+            end
+        end
+        if opts.navigation.down then
+            if opts.navigation.down:match('^<C%-%a>$') then
+                local key = string.lower(opts.navigation.down:match('^<C%-(%a)>$'))
+                nav_keymaps.down = string.byte(key) - string.byte('a') + 1
+            else
+                nav_keymaps.down = opts.navigation.down
+            end
+        end
     end
     
     -- Validate command map format
