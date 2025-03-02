@@ -9,8 +9,12 @@ require('cmdwin').setup()
 
 ```lua
 require('cmdwin').setup({
-    keymap = '<C-S>p'  -- open cmdwin
+    keymap = '<leader>p',  -- optional, this is the default
+    command_map = {
+        ["Find File"] = "Telescope find_files",
+        ["Git Status"] = "Git",
+        ["Format"] = "lua vim.lsp.buf.format()",
+        -- ... more commands ...
+    }
 })
-```
-
-
+``` 

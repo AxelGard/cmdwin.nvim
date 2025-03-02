@@ -8,6 +8,9 @@ local M = {}
 local current_win_id = nil
 local current_buf_id = nil
 
+-- Store the command map
+local command_map = {}
+
 -- Function to close the floating window
 local function close_floating_window()
     if current_win_id and vim.api.nvim_win_is_valid(current_win_id) then
@@ -54,8 +57,20 @@ local function open_floating_window()
     vim.api.nvim_buf_set_option(bufnr, 'modifiable', true)
     vim.api.nvim_buf_set_option(bufnr, 'buftype', 'nofile')
     
-    -- Add initial content
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {'Welcome to the floating window!'})
+    -- Add initial content - show command names
+    local lines = {'Available commands:'}
+    local commands = {}
+    -- Collect command names
+    for cmd_name, _ in pairs(command_map) do
+        table.insert(commands, cmd_name)
+    end
+    -- Sort commands alphabetically
+    table.sort(commands)
+    -- Add commands to lines
+    for _, cmd_name in ipairs(commands) do
+        table.insert(lines, cmd_name)
+    end
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
     
     -- Create a buffer-local autocommand group
     local group = vim.api.nvim_create_augroup('FloatingWindowClose_' .. bufnr, { clear = true })
@@ -72,6 +87,16 @@ end
 -- Setup function for configuration
 function M.setup(opts)
     opts = opts or {}
+    
+    -- Store the command map
+    command_map = opts.command_map or {}
+    
+    -- Validate command map format
+    for cmd_name, cmd_value in pairs(command_map) do
+        if type(cmd_name) ~= "string" or type(cmd_value) ~= "string" then
+            error("Command map must be in format { 'command_name': 'command_value' }")
+        end
+    end
     
     -- Set up the keymap (default to <leader>p if not specified)
     local keymap = opts.keymap or '<leader>p'
