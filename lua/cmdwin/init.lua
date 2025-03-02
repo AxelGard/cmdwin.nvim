@@ -262,9 +262,15 @@ open_floating_window = function()
     -- Create the window
     current_win_id = vim.api.nvim_open_win(bufnr, true, win_opts)
     
-    -- Set some buffer options
+    -- Set buffer options
     vim.api.nvim_buf_set_option(bufnr, 'modifiable', true)
     vim.api.nvim_buf_set_option(bufnr, 'buftype', 'nofile')
+    
+    -- Set window background color to match current theme
+    local normal_bg = vim.api.nvim_get_hl(0, { name = 'Normal' }).bg
+    if normal_bg then
+        vim.api.nvim_win_set_option(current_win_id, 'winhl', 'Normal:Normal,FloatBorder:Normal')
+    end
     
     -- Initialize window content
     update_window_content()
