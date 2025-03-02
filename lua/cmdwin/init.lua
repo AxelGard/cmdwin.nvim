@@ -267,9 +267,13 @@ open_floating_window = function()
     vim.api.nvim_buf_set_option(bufnr, 'buftype', 'nofile')
     
     -- Set window background color to match current theme
-    local normal_bg = vim.api.nvim_get_hl(0, { name = 'Normal' }).bg
-    if normal_bg then
-        vim.api.nvim_win_set_option(current_win_id, 'winhl', 'Normal:Normal,FloatBorder:Normal')
+    local normal = vim.api.nvim_get_hl(0, { name = 'Normal' })
+    if normal.bg then
+        -- Create a new highlight group for our floating window
+        vim.api.nvim_set_hl(0, 'CmdwinFloat', { bg = normal.bg })
+        vim.api.nvim_set_hl(0, 'CmdwinFloatBorder', { bg = normal.bg, fg = normal.fg })
+        -- Apply our custom highlight groups
+        vim.api.nvim_win_set_option(current_win_id, 'winhl', 'Normal:CmdwinFloat,FloatBorder:CmdwinFloatBorder')
     end
     
     -- Initialize window content
