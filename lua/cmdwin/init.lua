@@ -51,25 +51,29 @@ local function update_window_content()
         selected_index = #current_commands
     end
 
-    local lines = {
-        '> ' .. current_search,  -- Search prompt
-        string.rep('-', 30),     -- Simple separator
-    }
+    -- Prepare lines array
+    local lines = {}
+    
+    -- Add search prompt
+    table.insert(lines, '> ' .. (current_search or ""))
+    
+    -- Add separator
+    table.insert(lines, string.rep('-', 30))
     
     -- Add filtered commands with selection highlight
     for i, cmd_name in ipairs(current_commands) do
         if i == selected_index then
-            table.insert(lines, '> ' .. cmd_name)  -- Simple arrow for selected item
+            table.insert(lines, '> ' .. (cmd_name or ""))
         else
-            table.insert(lines, '  ' .. cmd_name)  -- Add padding for unselected items
+            table.insert(lines, '  ' .. (cmd_name or ""))
         end
     end
     
-    -- Update buffer content
-    vim.api.nvim_buf_set_lines(current_buf_id, 0, -1, false, lines)
+    -- Update buffer content safely
+    pcall(vim.api.nvim_buf_set_lines, current_buf_id, 0, -1, false, lines)
     
-    -- Move cursor to end of search line
-    vim.api.nvim_win_set_cursor(current_win_id, {1, #current_search + 2})
+    -- Move cursor to end of search line safely
+    pcall(vim.api.nvim_win_set_cursor, current_win_id, {1, #current_search + 2})
 end
 
 -- Function to handle navigation
@@ -97,7 +101,10 @@ end
 
 -- Function to handle key input
 local function handle_keypress()
-    local char = vim.fn.getchar()
+    local ok, char = pcall(vim.fn.getchar)
+    if not ok then
+        return
+    end
     
     -- Handle special keys when they come as numbers
     if type(char) == "number" then
@@ -117,10 +124,15 @@ local function handle_keypress()
             update_window_content()
             return
         end
+
         -- Convert regular characters to string
-        char = vim.fn.nr2char(char)
+        local ok2, char_str = pcall(vim.fn.nr2char, char)
+        if not ok2 then
+            return
+        end
+        char = char_str
     end
-    
+
     -- Handle navigation keys
     if char == nav_keymaps.up then
         handle_navigation('up')
@@ -131,7 +143,7 @@ local function handle_keypress()
     end
     
     -- Add printable characters to search
-    if char:match("^[%g%s]$") then  -- Only add printable characters and spaces
+    if type(char) == "string" and char:match("^[%g%s]$") and not char:match("[\n\r]") then
         current_search = current_search .. char
         -- Reset selection when search changes
         selected_index = 1
