@@ -55,28 +55,31 @@ end
 local function handle_keypress()
     local char = vim.fn.getchar()
     
-    -- Convert to string if it's a number (regular character)
+    -- Handle special keys when they come as numbers
     if type(char) == "number" then
+        -- Check for special keys
+        if char == 27 then  -- Esc key
+            close_floating_window()
+            return
+        elseif char == 13 then  -- Enter key
+            -- TODO: Execute selected command
+            return
+        elseif char == 127 or char == 8 then  -- Backspace (different systems use different codes)
+            if #current_search > 0 then
+                current_search = current_search:sub(1, -2)
+            end
+            update_window_content()
+            return
+        end
+        -- Convert regular characters to string
         char = vim.fn.nr2char(char)
     end
     
-    -- Handle special keys
-    if char == '\27' then  -- Esc key
-        close_floating_window()
-        return
-    elseif char == '\13' then  -- Enter key
-        -- TODO: Execute selected command
-        return
-    elseif char == '\127' or char == '\08' then  -- Backspace
-        if #current_search > 0 then
-            current_search = current_search:sub(1, -2)
-        end
-    else
-        -- Add character to search
+    -- Add printable characters to search
+    if char:match("^[%g%s]$") then  -- Only add printable characters and spaces
         current_search = current_search .. char
+        update_window_content()
     end
-    
-    update_window_content()
 end
 
 -- Function to close the floating window
