@@ -147,56 +147,38 @@ execute_selected_command = function()
 end
 
 handle_keypress = function()
-    local ok, char = pcall(vim.fn.getchar)
+    -- Use getcharstr() instead of getchar() for better key handling
+    local ok, char = pcall(vim.fn.getcharstr)
     if not ok then
         return
     end
-    
-    -- Handle special keys when they come as numbers
-    if type(char) == "number" then
-        -- Print debug info for the key
-        vim.api.nvim_echo({{string.format("Key code: %d", char), "Normal"}}, false, {})
-        
-        -- Check for special keys
-        if char == 27 then  -- Esc key
-            close_floating_window()
-            return
-        elseif char == 13 then  -- Enter key
-            execute_selected_command()
-            return
-        -- Handle all possible backspace codes
-        elseif char == 127  -- Backspace on many systems
-            or char == 8    -- Backspace on some systems
-            or char == 263  -- Some terminals might send this
-            or char == 0x7f -- Another way backspace might be represented
-            or char == 110  -- Your system's backspace code
-        then
-            if #current_search > 0 then
-                current_search = current_search:sub(1, -2)
-                -- Reset selection when search changes
-                selected_index = 1
-                update_window_content()
-            end
-            return
-        -- Handle navigation with control keys
-        elseif char == nav_keymaps.up then
-            handle_navigation('up')
-            return
-        elseif char == nav_keymaps.down then
-            handle_navigation('down')
-            return
-        end
 
-        -- Convert regular characters to string
-        local ok2, char_str = pcall(vim.fn.nr2char, char)
-        if not ok2 then
-            return
+    -- Handle special keys
+    if char == vim.api.nvim_replace_termcodes("<ESC>", true, false, true) then
+        close_floating_window()
+        return
+    elseif char == vim.api.nvim_replace_termcodes("<CR>", true, false, true) then
+        execute_selected_command()
+        return
+    elseif char == vim.api.nvim_replace_termcodes("<BS>", true, false, true) then
+        if #current_search > 0 then
+            current_search = current_search:sub(1, -2)
+            -- Reset selection when search changes
+            selected_index = 1
+            update_window_content()
         end
-        char = char_str
+        return
+    -- Handle navigation with control keys
+    elseif char == string.char(nav_keymaps.up) then
+        handle_navigation('up')
+        return
+    elseif char == string.char(nav_keymaps.down) then
+        handle_navigation('down')
+        return
     end
     
     -- Add printable characters to search
-    if type(char) == "string" and char:match("^[%g%s]$") and not char:match("[\n\r]") then
+    if char:match("^[%g%s]$") and not char:match("[\n\r]") then
         current_search = current_search .. char
         -- Reset selection when search changes
         selected_index = 1
