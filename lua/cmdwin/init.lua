@@ -4,6 +4,15 @@
 -- require'myluamodule'.setup({p1 = "value1"})
 local M = {}
 
+-- Forward declarations of functions
+local close_floating_window
+local filter_commands
+local update_window_content
+local handle_navigation
+local execute_selected_command
+local handle_keypress
+local open_floating_window
+
 -- Store the current window ID and buffer ID
 local current_win_id = nil
 local current_buf_id = nil
@@ -22,8 +31,8 @@ local nav_keymaps = {
     down = 10,  -- Ctrl-j (10 is the ASCII code for Ctrl-j)
 }
 
--- Function to close the floating window
-local function close_floating_window()
+-- Function implementations
+close_floating_window = function()
     -- First check if window exists and is valid
     if current_win_id and vim.api.nvim_win_is_valid(current_win_id) then
         -- Store IDs locally before resetting globals
@@ -48,8 +57,7 @@ local function close_floating_window()
     end
 end
 
--- Function to filter commands based on search
-local function filter_commands(search_term)
+filter_commands = function(search_term)
     local filtered = {}
     search_term = search_term:lower()
     for cmd_name, _ in pairs(command_map) do
@@ -61,8 +69,7 @@ local function filter_commands(search_term)
     return filtered
 end
 
--- Function to update window content
-local function update_window_content()
+update_window_content = function()
     if not (current_win_id and vim.api.nvim_win_is_valid(current_win_id)) then
         return
     end
@@ -102,8 +109,7 @@ local function update_window_content()
     pcall(vim.api.nvim_win_set_cursor, current_win_id, {1, #current_search + 2})
 end
 
--- Function to handle navigation
-local function handle_navigation(direction)
+handle_navigation = function(direction)
     if #current_commands == 0 then
         return
     end
@@ -125,8 +131,7 @@ local function handle_navigation(direction)
     update_window_content()
 end
 
--- Function to execute selected command
-local function execute_selected_command()
+execute_selected_command = function()
     if selected_index > 0 and selected_index <= #current_commands then
         local selected_name = current_commands[selected_index]
         local command = command_map[selected_name]
@@ -141,8 +146,7 @@ local function execute_selected_command()
     end
 end
 
--- Function to handle key input
-local function handle_keypress()
+handle_keypress = function()
     local ok, char = pcall(vim.fn.getchar)
     if not ok then
         return
@@ -191,8 +195,7 @@ local function handle_keypress()
     end
 end
 
--- Function to open a floating window
-local function open_floating_window()
+open_floating_window = function()
     -- If window is already open, close it
     if current_win_id and vim.api.nvim_win_is_valid(current_win_id) then
         close_floating_window()
