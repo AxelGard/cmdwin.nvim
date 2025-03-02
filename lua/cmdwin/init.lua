@@ -141,20 +141,8 @@ local function open_floating_window()
     vim.api.nvim_buf_set_option(bufnr, 'modifiable', true)
     vim.api.nvim_buf_set_option(bufnr, 'buftype', 'nofile')
     
-    -- Add initial content - show command names
-    local lines = {'Available commands:'}
-    local commands = {}
-    -- Collect command names
-    for cmd_name, _ in pairs(command_map) do
-        table.insert(commands, cmd_name)
-    end
-    -- Sort commands alphabetically
-    table.sort(commands)
-    -- Add commands to lines
-    for _, cmd_name in ipairs(commands) do
-        table.insert(lines, cmd_name)
-    end
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    -- Initialize window content
+    update_window_content()
     
     -- Create a buffer-local autocommand group
     local group = vim.api.nvim_create_augroup('FloatingWindowClose_' .. bufnr, { clear = true })
@@ -166,6 +154,14 @@ local function open_floating_window()
         callback = close_floating_window,
         once = true,
     })
+    
+    -- Start input loop
+    vim.schedule(function()
+        while current_win_id and vim.api.nvim_win_is_valid(current_win_id) do
+            handle_keypress()
+            vim.cmd('redraw')
+        end
+    end)
 end
 
 -- Setup function for configuration
