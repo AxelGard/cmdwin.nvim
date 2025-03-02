@@ -4,8 +4,25 @@
 -- require'myluamodule'.setup({p1 = "value1"})
 local M = {}
 
+-- Store the current window ID
+local current_win_id = nil
+
+-- Function to close the floating window
+local function close_floating_window()
+    if current_win_id and vim.api.nvim_win_is_valid(current_win_id) then
+        vim.api.nvim_win_close(current_win_id, true)
+        current_win_id = nil
+    end
+end
+
 -- Function to open a floating window
 local function open_floating_window()
+    -- If window is already open, close it
+    if current_win_id and vim.api.nvim_win_is_valid(current_win_id) then
+        close_floating_window()
+        return
+    end
+
     -- Window configuration
     local width = 60
     local height = 10
@@ -25,24 +42,31 @@ local function open_floating_window()
     }
     
     -- Create the window
-    local win_id = vim.api.nvim_open_win(bufnr, true, win_opts)
+    current_win_id = vim.api.nvim_open_win(bufnr, true, win_opts)
     
     -- Set some buffer options
     vim.api.nvim_buf_set_option(bufnr, 'modifiable', true)
     vim.api.nvim_buf_set_option(bufnr, 'buftype', 'nofile')
     
-    -- You can add initial content to the buffer if needed
+    -- Add initial content
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {'Welcome to the floating window!'})
+    
+    -- Add Esc keymap for this buffer
+    vim.keymap.set('n', '<Esc>', close_floating_window, {
+        buffer = bufnr,
+        silent = true,
+        nowait = true
+    })
 end
 
 -- Setup function for configuration
 function M.setup(opts)
     opts = opts or {}
     
-    -- Set up the keymap (default to <leader>w if not specified)
-    local keymap = opts.keymap or '<leader>w'
+    -- Set up the keymap (default to <leader>p if not specified)
+    local keymap = opts.keymap or '<leader>p'
     vim.keymap.set('n', keymap, open_floating_window, {
-        desc = 'Open floating window',
+        desc = 'Toggle floating window',
         silent = true
     })
 end
