@@ -25,6 +25,14 @@ local current_search = ""
 local selected_index = 0  -- 0 means no selection
 local current_commands = {}  -- Store filtered commands for navigation
 
+-- Style settings
+local style = {
+    prompt = '> ',
+    separator = '----------------------------------------',
+    selected = '> ',
+    unselected = '  ',
+}
+
 -- Store navigation keymaps
 local nav_keymaps = {
     up = 11,    -- Ctrl-k (11 is the ASCII code for Ctrl-k)
@@ -88,17 +96,17 @@ update_window_content = function()
     local lines = {}
     
     -- Add search prompt
-    table.insert(lines, '> ' .. (current_search or ""))
+    table.insert(lines, style.prompt .. (current_search or ""))
     
     -- Add separator
-    table.insert(lines, string.rep('-', 30))
+    table.insert(lines, style.separator)
     
     -- Add filtered commands with selection highlight
     for i, cmd_name in ipairs(current_commands) do
         if i == selected_index then
-            table.insert(lines, '> ' .. (cmd_name or ""))
+            table.insert(lines, style.selected .. (cmd_name or ""))
         else
-            table.insert(lines, '  ' .. (cmd_name or ""))
+            table.insert(lines, style.unselected .. (cmd_name or ""))
         end
     end
     
@@ -106,7 +114,7 @@ update_window_content = function()
     pcall(vim.api.nvim_buf_set_lines, current_buf_id, 0, -1, false, lines)
     
     -- Move cursor to end of search line safely
-    pcall(vim.api.nvim_win_set_cursor, current_win_id, {1, #current_search + 2})
+    pcall(vim.api.nvim_win_set_cursor, current_win_id, {1, #current_search + #style.prompt})
 end
 
 handle_navigation = function(direction)
@@ -252,6 +260,15 @@ function M.setup(opts)
     
     -- Store the command map
     command_map = opts.command_map or {}
+    
+    -- Update style settings if provided
+    if opts.style then
+        for k, v in pairs(opts.style) do
+            if style[k] then
+                style[k] = v
+            end
+        end
+    end
     
     -- Store navigation keymaps if provided
     if opts.navigation then
