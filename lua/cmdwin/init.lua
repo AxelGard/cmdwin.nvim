@@ -154,6 +154,9 @@ handle_keypress = function()
     
     -- Handle special keys when they come as numbers
     if type(char) == "number" then
+        -- Print debug info for the key
+        vim.api.nvim_echo({{string.format("Key code: %d", char), "Normal"}}, false, {})
+        
         -- Check for special keys
         if char == 27 then  -- Esc key
             close_floating_window()
@@ -161,13 +164,18 @@ handle_keypress = function()
         elseif char == 13 then  -- Enter key
             execute_selected_command()
             return
-        elseif char == 127 or char == 8 then  -- Backspace (different systems use different codes)
+        -- Handle all possible backspace codes
+        elseif char == 127  -- Backspace on many systems
+            or char == 8    -- Backspace on some systems
+            or char == 263  -- Some terminals might send this
+            or char == 0x7f -- Another way backspace might be represented
+        then
             if #current_search > 0 then
                 current_search = current_search:sub(1, -2)
                 -- Reset selection when search changes
                 selected_index = 1
+                update_window_content()
             end
-            update_window_content()
             return
         -- Handle navigation with control keys
         elseif char == nav_keymaps.up then
