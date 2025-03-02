@@ -4,14 +4,19 @@
 -- require'myluamodule'.setup({p1 = "value1"})
 local M = {}
 
--- Store the current window ID
+-- Store the current window ID and buffer ID
 local current_win_id = nil
+local current_buf_id = nil
 
 -- Function to close the floating window
 local function close_floating_window()
     if current_win_id and vim.api.nvim_win_is_valid(current_win_id) then
         vim.api.nvim_win_close(current_win_id, true)
         current_win_id = nil
+    end
+    if current_buf_id and vim.api.nvim_buf_is_valid(current_buf_id) then
+        vim.api.nvim_buf_delete(current_buf_id, { force = true })
+        current_buf_id = nil
     end
 end
 
@@ -27,6 +32,7 @@ local function open_floating_window()
     local width = 60
     local height = 10
     local bufnr = vim.api.nvim_create_buf(false, true)
+    current_buf_id = bufnr
     
     -- Calculate window position (centered)
     local ui = vim.api.nvim_list_uis()[1]
@@ -51,11 +57,15 @@ local function open_floating_window()
     -- Add initial content
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {'Welcome to the floating window!'})
     
-    -- Add Esc keymap for this buffer
-    vim.keymap.set('n', '<Esc>', close_floating_window, {
+    -- Create a buffer-local autocommand group
+    local group = vim.api.nvim_create_augroup('FloatingWindowClose_' .. bufnr, { clear = true })
+    
+    -- Add cleanup autocmd when window is closed
+    vim.api.nvim_create_autocmd('BufWinLeave', {
+        group = group,
         buffer = bufnr,
-        silent = true,
-        nowait = true
+        callback = close_floating_window,
+        once = true,
     })
 end
 
