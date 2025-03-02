@@ -169,6 +169,7 @@ handle_keypress = function()
             or char == 8    -- Backspace on some systems
             or char == 263  -- Some terminals might send this
             or char == 0x7f -- Another way backspace might be represented
+            or char == 110  -- Your system's backspace code
         then
             if #current_search > 0 then
                 current_search = current_search:sub(1, -2)
