@@ -22,6 +22,32 @@ local nav_keymaps = {
     down = 10,  -- Ctrl-j (10 is the ASCII code for Ctrl-j)
 }
 
+-- Function to close the floating window
+local function close_floating_window()
+    -- First check if window exists and is valid
+    if current_win_id and vim.api.nvim_win_is_valid(current_win_id) then
+        -- Store IDs locally before resetting globals
+        local win_to_close = current_win_id
+        local buf_to_delete = current_buf_id
+        
+        -- Reset global IDs and search
+        current_win_id = nil
+        current_buf_id = nil
+        current_search = ""
+        selected_index = 0
+        
+        -- Close the window using local ID
+        vim.api.nvim_win_close(win_to_close, true)
+        
+        -- Schedule buffer deletion for next event loop iteration
+        vim.schedule(function()
+            if buf_to_delete and vim.api.nvim_buf_is_valid(buf_to_delete) then
+                vim.api.nvim_buf_delete(buf_to_delete, { force = true })
+            end
+        end)
+    end
+end
+
 -- Function to filter commands based on search
 local function filter_commands(search_term)
     local filtered = {}
@@ -162,32 +188,6 @@ local function handle_keypress()
         -- Reset selection when search changes
         selected_index = 1
         update_window_content()
-    end
-end
-
--- Function to close the floating window
-local function close_floating_window()
-    -- First check if window exists and is valid
-    if current_win_id and vim.api.nvim_win_is_valid(current_win_id) then
-        -- Store IDs locally before resetting globals
-        local win_to_close = current_win_id
-        local buf_to_delete = current_buf_id
-        
-        -- Reset global IDs and search
-        current_win_id = nil
-        current_buf_id = nil
-        current_search = ""
-        selected_index = 0
-        
-        -- Close the window using local ID
-        vim.api.nvim_win_close(win_to_close, true)
-        
-        -- Schedule buffer deletion for next event loop iteration
-        vim.schedule(function()
-            if buf_to_delete and vim.api.nvim_buf_is_valid(buf_to_delete) then
-                vim.api.nvim_buf_delete(buf_to_delete, { force = true })
-            end
-        end)
     end
 end
 
