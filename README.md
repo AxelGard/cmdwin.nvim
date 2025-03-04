@@ -2,13 +2,22 @@
 A neovim extanstion for applaying commands that you don't want shortcuts for. 
 It works similar to the `Ctrl-Shift-P` in VSCode.
 
+The point of this plugin is that it allows you to map a keyword to a command 
+so that you do not need to have a weird keymapping for it that you won’t remember.
+
 > This is quite a new extension, so it might have some bugs.
 > If you find any bugs, please report them on the [github issues page](https://github.com/AxelGard/cmdwin.nvim/issues).
 
 ![cmdwin](./doc/ex.png)
 
-## Usage
+## Install 
 
+packer
+```lua
+use('AxelGard/cmdwin.nvim')
+```
+
+### setup
 
 minimal setup:
 ```lua
