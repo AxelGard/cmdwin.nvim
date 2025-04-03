@@ -40,6 +40,8 @@ require('cmdwin').setup({
         ["Format"] = "lua vim.lsp.buf.format()",
         ["Git Status"] = "Git",
         ["Find File"] = "Telescope find_files",
+        ["Equal Buff"] = 'lua vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-w>=", true, true, true), "n", true)', -- use key commands such as <C-w>=
+
     },
     navigation = {
         up = '<C-k>',
