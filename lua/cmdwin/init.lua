@@ -45,6 +45,7 @@ local window = {
         left = 2
     },
     border = 'rounded'     -- border style
+    max_commands = 8, -- Max number of commands shown in window
 }
 
 -- Store navigation keymaps
@@ -98,37 +99,47 @@ update_window_content = function()
 
     -- Update filtered commands
     current_commands = filter_commands(current_search)
-    
+
+    -- Limit the number of commands shown
+    local max_to_show = window.max_commands or #current_commands
+    local shown_commands = {}
+    for i = 1, math.min(#current_commands, max_to_show) do
+        table.insert(shown_commands, current_commands[i])
+    end
+
     -- Adjust selected_index if it's out of bounds
-    if #current_commands == 0 then
+    if #shown_commands == 0 then
         selected_index = 0
-    elseif selected_index > #current_commands then
-        selected_index = #current_commands
+    elseif selected_index > #shown_commands then
+        selected_index = #shown_commands
     end
 
     -- Prepare lines array
     local lines = {}
-    
+
     -- Add search prompt
     table.insert(lines, style.prompt .. (current_search or ""))
-    
+
     -- Add separator
     table.insert(lines, style.separator)
-    
+
     -- Add filtered commands with selection highlight
-    for i, cmd_name in ipairs(current_commands) do
+    for i, cmd_name in ipairs(shown_commands) do
         if i == selected_index then
             table.insert(lines, style.selected .. (cmd_name or ""))
         else
             table.insert(lines, style.unselected .. (cmd_name or ""))
         end
     end
-    
+
     -- Update buffer content safely
     pcall(vim.api.nvim_buf_set_lines, current_buf_id, 0, -1, false, lines)
-    
+
     -- Move cursor to end of search line safely
     pcall(vim.api.nvim_win_set_cursor, current_win_id, {1, #current_search + #style.prompt})
+
+    -- Update current_commands to only those shown
+    current_commands = shown_commands
 end
 
 handle_navigation = function(direction)
