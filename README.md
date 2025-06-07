@@ -67,3 +67,4 @@ require('cmdwin').setup({
     },
 })
 ``` 
+You can find my own my one cmdwin config [here](https://github.com/AxelGard/dotfiles/blob/main/.config/nvim/lua/axel/plugins/cmdwin.lua).
