@@ -9,6 +9,7 @@ so that you do not need to have a weird keymapping for it that you won’t remem
 > If you find any bugs, please report them on the [github issues page](https://github.com/AxelGard/cmdwin.nvim/issues).
 
 ![cmdwin](./doc/ex.png)
+![cmdwin_2](./doc/ex_2.png)
 
 ## Install 
 
