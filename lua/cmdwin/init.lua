@@ -147,6 +147,16 @@ update_window_content = function()
     pcall(vim.api.nvim_win_set_cursor, current_win_id, {1, #current_search + #style.prompt})
 end
 
+-- Redraw the screen and move the visible cursor to the window cursor.
+-- A plain :redraw inside the input loop leaves the terminal cursor where it was.
+local function redraw()
+    if vim.api.nvim__redraw and current_win_id and vim.api.nvim_win_is_valid(current_win_id) then
+        vim.api.nvim__redraw({ win = current_win_id, cursor = true, flush = true })
+    else
+        vim.cmd('redraw')
+    end
+end
+
 handle_navigation = function(direction)
     if #current_commands == 0 then
         return
@@ -301,6 +311,8 @@ open_floating_window = function()
 
     -- Set window options to use default colors (no highlighting)
     vim.wo[current_win_id].winhighlight = ''
+    -- Let the cursor sit after the last typed character (normal mode would clamp it)
+    vim.wo[current_win_id].virtualedit = 'onemore'
 
     -- Initialize window content
     update_window_content()
@@ -318,10 +330,10 @@ open_floating_window = function()
 
     -- Start input loop
     vim.schedule(function()
-        vim.cmd('redraw')
+        redraw()
         while current_win_id and vim.api.nvim_win_is_valid(current_win_id) do
             handle_keypress()
-            vim.cmd('redraw')
+            redraw()
         end
     end)
 end
