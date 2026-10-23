@@ -43,8 +43,8 @@ require('cmdwin').setup({
         ["Equal Buff"] = 'lua vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-w>=", true, true, true), "n", true)', -- use key commands such as <C-w>=
 
     },
-    navigation = {
-        up = '<C-k>',
+    navigation = {          -- any key notation works, e.g. '<C-k>', '<M-k>', '<Tab>'
+        up = '<C-k>',       -- arrow keys always work as well
         down = '<C-j>',
     },
     style = {
